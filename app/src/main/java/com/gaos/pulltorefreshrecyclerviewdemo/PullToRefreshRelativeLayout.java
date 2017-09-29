@@ -247,4 +247,5 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
 
         return true;
     }
+
 }
