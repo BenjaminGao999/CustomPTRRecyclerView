@@ -30,6 +30,10 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
     private boolean isloadmore;
     private float rawY;
     private float dy;
+    private IPullToRefreshManager.IPullToRefresh mIPullToRefresh;
+    private int mHeaderViewMeasuredHeight;
+    private int mFooterViewMeasuredHeight;
+
 
     public PullToRefreshRelativeLayout(Context context) {
         this(context, null);
@@ -50,6 +54,8 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
                 getViewTreeObserver().removeGlobalOnLayoutListener(this);
             }
         });
+
+        IPullToRefreshManager.setiPullToRefreshResult(iPullToRefreshResult);
     }
 
 
@@ -178,8 +184,8 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
         mHeaderView = getChildAt(1);
         mFooterView = getChildAt(2);
 
-        int mHeaderViewMeasuredHeight = mHeaderView.getMeasuredHeight();
-        int mFooterViewMeasuredHeight = mFooterView.getMeasuredHeight();
+        mHeaderViewMeasuredHeight = mHeaderView.getMeasuredHeight();
+        mFooterViewMeasuredHeight = mFooterView.getMeasuredHeight();
 
 
         mRecyclerView.layout(l, (int) (t + dy), r, (int) (b + dy));
@@ -237,9 +243,12 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
                 Log.e(TAG, "onTouchEvent: ACTION_UP");
                 isloadmore = false;
                 isRefresh = false;
-                dy = 0;
+//                dy = 0;
                 disY = 0;
-                requestLayout();
+//                requestLayout();
+
+                onRefreshUp();
+
                 break;
             default:
                 break;
@@ -248,4 +257,33 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
         return true;
     }
 
+    private void onRefreshUp() {
+        if (dy < mHeaderViewMeasuredHeight) {
+            dy = 0;
+        } else {
+            dy = mHeaderViewMeasuredHeight;
+            if (mIPullToRefresh != null) {
+                mIPullToRefresh.onRefresh();
+            }
+        }
+
+        requestLayout();
+    }
+
+    public void setIPullToRefresh(IPullToRefreshManager.IPullToRefresh iPullToRefresh) {
+        mIPullToRefresh = iPullToRefresh;
+    }
+
+    private IPullToRefreshManager.IPullToRefreshResult iPullToRefreshResult = new IPullToRefreshManager.IPullToRefreshResult() {
+        @Override
+        public void onRefreshResult(IPullToRefreshManager.EPullToRefreshResult ePullToRefreshResult) {
+            dy = 0;
+            requestLayout();
+        }
+
+        @Override
+        public void onLoadMoreResult(IPullToRefreshManager.EPullToRefreshResult ePullToRefreshResult) {
+
+        }
+    };
 }

@@ -1,5 +1,7 @@
 package com.gaos.pulltorefreshrecyclerviewdemo;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -26,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
         MyRecyclerViewAdapter myRecyclerViewAdapter = new MyRecyclerViewAdapter();
 
         ArrayList<String> arrayList = new ArrayList<>();
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 20; i++) {
             arrayList.add("Item+" + i);
         }
 
@@ -38,5 +40,27 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(myRecyclerViewAdapter);
 
 //        recyclerView.setOverScrollMode(RecyclerView.OVER_SCROLL_NEVER);
+        PullToRefreshRelativeLayout refreshRelativeLayout = (PullToRefreshRelativeLayout) findViewById(R.id.activity_main);
+        refreshRelativeLayout.setIPullToRefresh(new IPullToRefreshManager.IPullToRefresh() {
+            @Override
+            public void onRefresh() {
+
+                doRefresh();
+            }
+
+            @Override
+            public void onLoadMore() {
+
+            }
+        });
+    }
+
+    private void doRefresh() {
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                IPullToRefreshManager.iPullToRefreshResult.onRefreshResult(IPullToRefreshManager.EPullToRefreshResult.SUCCESSED);
+            }
+        }, 1000);
     }
 }
