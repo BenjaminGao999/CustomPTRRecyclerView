@@ -37,7 +37,8 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
     private float mRecyclerViewCurrentMoveY2;
     private LinearLayoutManager recyclerViewLayoutManager;
     private boolean isFooterViewShow;
-//    private boolean isInit = true;
+    //    private boolean isInit = true;
+    private int dyScrolled;
 
 
     public PullToRefreshRelativeLayout(Context context) {
@@ -86,26 +87,7 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
 
                     newStateF = newState;
 
-                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                        boolean lastBoolean = recyclerViewLayoutManager.findLastCompletelyVisibleItemPosition() == recyclerViewLayoutManager.getItemCount() - 1;
-//                            boolean firstBoolean = recyclerViewLayoutManager.findFirstCompletelyVisibleItemPosition() == 0;
-                        if (lastBoolean && !isFooterViewShow) {
-                            int lastCompletelyVisibleItemPosition = recyclerViewLayoutManager.findLastCompletelyVisibleItemPosition();
-                            View childAtLast = recyclerViewLayoutManager.findViewByPosition(lastCompletelyVisibleItemPosition);
-                            if (childAtLast != null) {
-//                                        int itemMeasuredHeight = childAtLast.getMeasuredHeight();
-                                int childAtLastBottom = childAtLast.getBottom();
-                                int recyclerViewBottom = mRecyclerView.getBottom();
-
-                                if (recyclerViewBottom == childAtLastBottom) {//最后一个Item刚好完全可见
-                                    isFooterViewShow = true;
-                                    requestLayout();
-                                    mRecyclerView.scrollToPosition(recyclerViewLayoutManager.getItemCount() - 1);
-                                }
-                            }
-                        }
-
-                    }
+                    judgeloadmoreEnable(newState);
 
                 }
 
@@ -116,7 +98,7 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
                      *只有当列表 滚动 时，才会调用该方法
                      */
 
-//                    Log.e(TAG, "onScrolled: dy = " + dy);
+                    Log.e(TAG, "onScrolled: dy = " + dy);
 
                     if (newStateF == RecyclerView.SCROLL_STATE_DRAGGING) {
                         if (isFooterViewShow) {
@@ -127,6 +109,7 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
                         }
                     }
 
+                    dyScrolled = dy;
 
                 }
             });
@@ -140,18 +123,72 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
                             Log.e(TAG, "onTouch: recyclerview ACTION_DOWN  ");
                             break;
                         case MotionEvent.ACTION_MOVE:
-                            Log.e(TAG, "onTouch: recyclerview ACTION_MOVE ");
+//                            Log.e(TAG, "onTouch: recyclerview ACTION_MOVE ");
+                            judgeRefreshEnable(event);
+                            judgeloadmoreEnable(newStateF);
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            Log.e(TAG, "onTouch: recyclerview ACTION_UP ");
+//                            isloadmore = false;
+                            isRefresh = false;
+                            dy = 0;
+                            disY = 0;
+                            disY2 = 0;
+                            break;
+                        case MotionEvent.ACTION_CANCEL:
 
-                            /**
-                             * 刷新 触发条件
-                             */
+                            Log.e(TAG, "onTouch: recyclerview ACTION_CANCEL ");
+                            break;
+                        default:
+                            break;
+                    }
 
-                            if (recyclerViewLayoutManager == null) {
-                                recyclerViewLayoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
-                            }
-                            if (newStateF == RecyclerView.SCROLL_STATE_DRAGGING) {
+                    return false;
+                }
+            });
+
+        }
+    }
+
+    private void judgeloadmoreEnable(int newState) {
+        if (dyScrolled > 0) {
+            if (recyclerViewLayoutManager == null) {
+                recyclerViewLayoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+            }
+            if (newState == RecyclerView.SCROLL_STATE_IDLE || newState == RecyclerView.SCROLL_STATE_DRAGGING) {
+                boolean lastBoolean = recyclerViewLayoutManager.findLastCompletelyVisibleItemPosition() == recyclerViewLayoutManager.getItemCount() - 1;
+//                            boolean firstBoolean = recyclerViewLayoutManager.findFirstCompletelyVisibleItemPosition() == 0;
+                if (lastBoolean && !isFooterViewShow) {
+                    int lastCompletelyVisibleItemPosition = recyclerViewLayoutManager.findLastCompletelyVisibleItemPosition();
+                    View childAtLast = recyclerViewLayoutManager.findViewByPosition(lastCompletelyVisibleItemPosition);
+                    if (childAtLast != null) {
+//                                        int itemMeasuredHeight = childAtLast.getMeasuredHeight();
+                        int childAtLastBottom = childAtLast.getBottom();
+                        int recyclerViewBottom = mRecyclerView.getBottom();
+
+                        if (recyclerViewBottom == childAtLastBottom) {//最后一个Item刚好完全可见
+                            isFooterViewShow = true;
+                            requestLayout();
+                            mRecyclerView.scrollToPosition(recyclerViewLayoutManager.getItemCount() - 1);
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+
+    private void judgeRefreshEnable(MotionEvent event) {
+        /**
+         * 刷新 触发条件
+         */
+
+        if (recyclerViewLayoutManager == null) {
+            recyclerViewLayoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+        }
+        if (newStateF == RecyclerView.SCROLL_STATE_DRAGGING) {
 //                                boolean lastBoolean = recyclerViewLayoutManager.findLastCompletelyVisibleItemPosition() == recyclerViewLayoutManager.getItemCount() - 1;
-                                boolean firstBoolean = recyclerViewLayoutManager.findFirstCompletelyVisibleItemPosition() == 0;
+            boolean firstBoolean = recyclerViewLayoutManager.findFirstCompletelyVisibleItemPosition() == 0;
 //                                if (firstBoolean && !lastBoolean) {
 //                                    isRefresh = true;
 //
@@ -169,20 +206,20 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
 //                                    Log.e(TAG, "onTouch: disY = " + disY);
 //                                }
 
-                                if (firstBoolean) {
+            if (firstBoolean) {
 
-                                    mRecyclerViewCurrentMoveY = event.getRawY();
-                                    disY += (mRecyclerViewCurrentMoveY - mRawDownY) / 3.0f;//10倍的阻尼系数
-                                    mRawDownY = mRecyclerViewCurrentMoveY;
+                mRecyclerViewCurrentMoveY = event.getRawY();
+                disY += (mRecyclerViewCurrentMoveY - mRawDownY) / 3.0f;//10倍的阻尼系数
+                mRawDownY = mRecyclerViewCurrentMoveY;
 
-                                    if (disY > 30) {
+                if (disY > 30) {
 
-                                        isRefresh = true;
-                                    }
+                    isRefresh = true;
+                }
 
-                                    Log.e(TAG, "onTouch:isRefresh  disY = " + disY);
-                                }
-                            }
+                Log.e(TAG, "onTouch:isRefresh  disY = " + disY);
+            }
+        }
 
 //                            /**
 //                             *加载更多 触发条件
@@ -216,30 +253,6 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
 //                                }
 //
 //                            }
-
-
-                            break;
-                        case MotionEvent.ACTION_UP:
-                            Log.e(TAG, "onTouch: recyclerview ACTION_UP ");
-//                            isloadmore = false;
-                            isRefresh = false;
-                            dy = 0;
-                            disY = 0;
-                            disY2 = 0;
-                            break;
-                        case MotionEvent.ACTION_CANCEL:
-
-                            Log.e(TAG, "onTouch: recyclerview ACTION_CANCEL ");
-                            break;
-                        default:
-                            break;
-                    }
-
-                    return false;
-                }
-            });
-
-        }
     }
 
 

@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
         MyRecyclerViewAdapter myRecyclerViewAdapter = new MyRecyclerViewAdapter();
 
         ArrayList<String> arrayList = new ArrayList<>();
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 20; i++) {
             arrayList.add("Item+" + i);
         }
 
