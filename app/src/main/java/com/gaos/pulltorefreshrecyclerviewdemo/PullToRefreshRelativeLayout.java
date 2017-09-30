@@ -27,7 +27,7 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
     private boolean isRefresh;
     private float mRecyclerViewCurrentMoveY;
     private float disY;
-    private boolean isloadmore;
+    //    private boolean isloadmore;
     private float rawY;
     private float dy;
     private IPullToRefreshManager.IPullToRefresh mIPullToRefresh;
@@ -35,6 +35,9 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
     private int mFooterViewMeasuredHeight;
     private float disY2;
     private float mRecyclerViewCurrentMoveY2;
+    private LinearLayoutManager recyclerViewLayoutManager;
+    private boolean isFooterViewShow;
+//    private boolean isInit = true;
 
 
     public PullToRefreshRelativeLayout(Context context) {
@@ -83,6 +86,27 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
 
                     newStateF = newState;
 
+                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                        boolean lastBoolean = recyclerViewLayoutManager.findLastCompletelyVisibleItemPosition() == recyclerViewLayoutManager.getItemCount() - 1;
+//                            boolean firstBoolean = recyclerViewLayoutManager.findFirstCompletelyVisibleItemPosition() == 0;
+                        if (lastBoolean && !isFooterViewShow) {
+                            int lastCompletelyVisibleItemPosition = recyclerViewLayoutManager.findLastCompletelyVisibleItemPosition();
+                            View childAtLast = recyclerViewLayoutManager.findViewByPosition(lastCompletelyVisibleItemPosition);
+                            if (childAtLast != null) {
+//                                        int itemMeasuredHeight = childAtLast.getMeasuredHeight();
+                                int childAtLastBottom = childAtLast.getBottom();
+                                int recyclerViewBottom = mRecyclerView.getBottom();
+
+                                if (recyclerViewBottom == childAtLastBottom) {//最后一个Item刚好完全可见
+                                    isFooterViewShow = true;
+                                    requestLayout();
+                                    mRecyclerView.scrollToPosition(recyclerViewLayoutManager.getItemCount() - 1);
+                                }
+                            }
+                        }
+
+                    }
+
                 }
 
                 @Override
@@ -93,6 +117,17 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
                      */
 
 //                    Log.e(TAG, "onScrolled: dy = " + dy);
+
+                    if (newStateF == RecyclerView.SCROLL_STATE_DRAGGING) {
+                        if (isFooterViewShow) {
+                            if (dy < 0) {
+                                isFooterViewShow = false;
+                                requestLayout();
+                            }
+                        }
+                    }
+
+
                 }
             });
 
@@ -110,7 +145,10 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
                             /**
                              * 刷新 触发条件
                              */
-                            LinearLayoutManager recyclerViewLayoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+
+                            if (recyclerViewLayoutManager == null) {
+                                recyclerViewLayoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+                            }
                             if (newStateF == RecyclerView.SCROLL_STATE_DRAGGING) {
 //                                boolean lastBoolean = recyclerViewLayoutManager.findLastCompletelyVisibleItemPosition() == recyclerViewLayoutManager.getItemCount() - 1;
                                 boolean firstBoolean = recyclerViewLayoutManager.findFirstCompletelyVisibleItemPosition() == 0;
@@ -146,43 +184,44 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
                                 }
                             }
 
-                            /**
-                             *加载更多 触发条件
-                             */
-                            if (newStateF == RecyclerView.SCROLL_STATE_DRAGGING) {
-                                boolean lastBoolean = recyclerViewLayoutManager.findLastCompletelyVisibleItemPosition() == recyclerViewLayoutManager.getItemCount() - 1;
-                                if (lastBoolean) {
-                                    int lastCompletelyVisibleItemPosition = recyclerViewLayoutManager.findLastCompletelyVisibleItemPosition();
-                                    View childAtLast = recyclerViewLayoutManager.findViewByPosition(lastCompletelyVisibleItemPosition);
+//                            /**
+//                             *加载更多 触发条件
+//                             */
+//                            if (newStateF == RecyclerView.SCROLL_STATE_DRAGGING) {
+//                                boolean lastBoolean = recyclerViewLayoutManager.findLastCompletelyVisibleItemPosition() == recyclerViewLayoutManager.getItemCount() - 1;
+//                                if (lastBoolean) {
+//                                    int lastCompletelyVisibleItemPosition = recyclerViewLayoutManager.findLastCompletelyVisibleItemPosition();
+//                                    View childAtLast = recyclerViewLayoutManager.findViewByPosition(lastCompletelyVisibleItemPosition);
+//
+//                                    if (childAtLast != null) {
+////                                        int itemMeasuredHeight = childAtLast.getMeasuredHeight();
+//                                        int childAtLastBottom = childAtLast.getBottom();
+//                                        int recyclerViewBottom = mRecyclerView.getBottom();
+//
+//                                        if (recyclerViewBottom == childAtLastBottom) {
+//
+//                                            mRecyclerViewCurrentMoveY2 = event.getRawY();
+//                                            disY2 += (mRecyclerViewCurrentMoveY2 - mRawDownY) / 3.0f;//10倍的阻尼系数
+//                                            mRawDownY = mRecyclerViewCurrentMoveY2;
+//
+//                                            if (disY2 < -30) {
+//
+//                                                isloadmore = true;
+//                                            }
+//
+//                                            Log.e(TAG, "onTouch: isloadmore disY = " + disY2);
+//
+//                                        }
+//                                    }
+//                                }
+//
+//                            }
 
-                                    if (childAtLast != null) {
-//                                        int itemMeasuredHeight = childAtLast.getMeasuredHeight();
-                                        int childAtLastBottom = childAtLast.getBottom();
-                                        int recyclerViewBottom = mRecyclerView.getBottom();
-
-                                        if (recyclerViewBottom == childAtLastBottom) {
-
-                                            mRecyclerViewCurrentMoveY2 = event.getRawY();
-                                            disY2 += (mRecyclerViewCurrentMoveY2 - mRawDownY) / 3.0f;//10倍的阻尼系数
-                                            mRawDownY = mRecyclerViewCurrentMoveY2;
-
-                                            if (disY2 < -30) {
-
-                                                isloadmore = true;
-                                            }
-
-                                            Log.e(TAG, "onTouch: isloadmore disY = " + disY2);
-
-                                        }
-                                    }
-                                }
-
-                            }
 
                             break;
                         case MotionEvent.ACTION_UP:
                             Log.e(TAG, "onTouch: recyclerview ACTION_UP ");
-                            isloadmore = false;
+//                            isloadmore = false;
                             isRefresh = false;
                             dy = 0;
                             disY = 0;
@@ -216,11 +255,21 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
         mFooterViewMeasuredHeight = mFooterView.getMeasuredHeight();
 
 
-        mRecyclerView.layout(l, (int) (t + dy), r, (int) (b + dy));
+//        mRecyclerView.layout(l, (int) (t + dy), r, (int) (b + dy));
         mHeaderView.layout(l, (int) (-mHeaderViewMeasuredHeight + dy), r, (int) dy);
-        mFooterView.layout(l, (int) (b + dy), r, (int) (b + mFooterViewMeasuredHeight + dy));
+//        mFooterView.layout(l, (int) (b + dy), r, (int) (b + mFooterViewMeasuredHeight + dy));
 
         Log.e(TAG, "onLayout: l = " + l + " ; t = " + t + " ; r = " + r + " ;  b = " + b);
+
+        if (isFooterViewShow) {
+            mRecyclerView.layout(l, t, r, b - mFooterViewMeasuredHeight);
+            mFooterView.layout(l, b - mFooterViewMeasuredHeight, r, b);
+//            mRecyclerView.scrollToPosition(recyclerViewLayoutManager.getItemCount() - 1);
+            Log.e(TAG, "onLayout: mRecyclerView Bottom = " + mRecyclerView.getBottom());
+        } else {
+            mRecyclerView.layout(l, (int) (t + dy), r, (int) (b + dy));
+            mFooterView.layout(l, (int) (b + dy), r, (int) (b + mFooterViewMeasuredHeight + dy));
+        }
     }
 
     @Override
@@ -241,7 +290,10 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
                 break;
         }
 
-        if (isRefresh || isloadmore) {
+//        if (isRefresh || isloadmore) {
+//            return true;
+//        }
+        if (isRefresh) {
             return true;
         }
         return super.onInterceptTouchEvent(ev);
@@ -269,7 +321,7 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
                 break;
             case MotionEvent.ACTION_UP:
                 Log.e(TAG, "onTouchEvent: ACTION_UP");
-                isloadmore = false;
+//                isloadmore = false;
 //                isRefresh = false;
 //                dy = 0;
                 disY = 0;
@@ -285,6 +337,7 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
 
         return true;
     }
+
 
     private void onRefreshUp() {
         if (dy < mHeaderViewMeasuredHeight) {
