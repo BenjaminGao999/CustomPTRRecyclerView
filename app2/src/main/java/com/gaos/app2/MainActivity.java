@@ -1,9 +1,9 @@
-package com.gaos.pulltorefreshrecyclerviewdemo;
+package com.gaos.app2;
 
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Window;
