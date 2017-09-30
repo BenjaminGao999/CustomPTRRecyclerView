@@ -1,5 +1,6 @@
 package com.gaos.app2;
 
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,11 +24,15 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter {
     private static final int ITEM_TYPE_FOOTER_VIEW = 100;
     private static final int ITEM_TYPE_ITEM_NORMAL = 101;
 
+    public MyRecyclerViewAdapter() {
+
+    }
+
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         if (viewType == ITEM_TYPE_FOOTER_VIEW) {
 
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.footer_view,parent,false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.footer_view, parent, false);
             CommonRecyclerViewVH vh = new CommonRecyclerViewVH(view);
             return vh;
         } else {
@@ -77,6 +82,31 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter {
         this.data = data;
     }
 
+    @Override
+    public void onAttachedToRecyclerView(final RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        if (recyclerView != null) {
+            LinearLayoutManager recyclerViewLayoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+            if (recyclerViewLayoutManager != null) {
+                IPullToRefreshManager.setiFooterViewManager(new IPullToRefreshManager.IFooterViewManager() {
+                    @Override
+                    public void showEmpty() {
+
+                    }
+
+                    @Override
+                    public void showNone() {
+
+                    }
+
+                    @Override
+                    public void showloading() {
+
+                    }
+                });
+            }
+        }
+    }
 
     class MyViewHolder extends RecyclerView.ViewHolder {
 

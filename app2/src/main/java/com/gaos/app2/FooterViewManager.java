@@ -37,7 +37,7 @@ public class FooterViewManager extends FrameLayout {
 //        for (int i = 0; i < getChildCount(); i++) {
 //            getChildAt(i).setVisibility(GONE);
 //        }
-        showloading();
+//        showloading();
     }
 
 
