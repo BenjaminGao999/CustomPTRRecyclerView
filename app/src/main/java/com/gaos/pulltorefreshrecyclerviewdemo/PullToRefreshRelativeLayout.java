@@ -33,6 +33,8 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
     private IPullToRefreshManager.IPullToRefresh mIPullToRefresh;
     private int mHeaderViewMeasuredHeight;
     private int mFooterViewMeasuredHeight;
+    private float disY2;
+    private float mRecyclerViewCurrentMoveY2;
 
 
     public PullToRefreshRelativeLayout(Context context) {
@@ -110,12 +112,26 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
                              */
                             LinearLayoutManager recyclerViewLayoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
                             if (newStateF == RecyclerView.SCROLL_STATE_DRAGGING) {
-                                boolean lastBoolean = recyclerViewLayoutManager.findLastCompletelyVisibleItemPosition() == recyclerViewLayoutManager.getItemCount() - 1;
+//                                boolean lastBoolean = recyclerViewLayoutManager.findLastCompletelyVisibleItemPosition() == recyclerViewLayoutManager.getItemCount() - 1;
                                 boolean firstBoolean = recyclerViewLayoutManager.findFirstCompletelyVisibleItemPosition() == 0;
-                                if (firstBoolean && !lastBoolean) {
-                                    isRefresh = true;
+//                                if (firstBoolean && !lastBoolean) {
+//                                    isRefresh = true;
+//
+//                                } else if (firstBoolean && lastBoolean) {
+//
+//                                    mRecyclerViewCurrentMoveY = event.getRawY();
+//                                    disY += (mRecyclerViewCurrentMoveY - mRawDownY) / 3.0f;//10倍的阻尼系数
+//                                    mRawDownY = mRecyclerViewCurrentMoveY;
+//
+//                                    if (disY > 30) {
+//
+//                                        isRefresh = true;
+//                                    }
+//
+//                                    Log.e(TAG, "onTouch: disY = " + disY);
+//                                }
 
-                                } else if (firstBoolean && lastBoolean) {
+                                if (firstBoolean) {
 
                                     mRecyclerViewCurrentMoveY = event.getRawY();
                                     disY += (mRecyclerViewCurrentMoveY - mRawDownY) / 3.0f;//10倍的阻尼系数
@@ -126,7 +142,7 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
                                         isRefresh = true;
                                     }
 
-                                    Log.e(TAG, "onTouch: disY = " + disY);
+                                    Log.e(TAG, "onTouch:isRefresh  disY = " + disY);
                                 }
                             }
 
@@ -145,7 +161,18 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
                                         int recyclerViewBottom = mRecyclerView.getBottom();
 
                                         if (recyclerViewBottom == childAtLastBottom) {
-                                            isloadmore = true;
+
+                                            mRecyclerViewCurrentMoveY2 = event.getRawY();
+                                            disY2 += (mRecyclerViewCurrentMoveY2 - mRawDownY) / 3.0f;//10倍的阻尼系数
+                                            mRawDownY = mRecyclerViewCurrentMoveY2;
+
+                                            if (disY2 < -30) {
+
+                                                isloadmore = true;
+                                            }
+
+                                            Log.e(TAG, "onTouch: isloadmore disY = " + disY2);
+
                                         }
                                     }
                                 }
@@ -159,6 +186,7 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
                             isRefresh = false;
                             dy = 0;
                             disY = 0;
+                            disY2 = 0;
                             break;
                         case MotionEvent.ACTION_CANCEL:
 
@@ -246,6 +274,7 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
 //                dy = 0;
                 disY = 0;
 //                requestLayout();
+                disY2 = 0;
 
                 onRefreshUp();
 
