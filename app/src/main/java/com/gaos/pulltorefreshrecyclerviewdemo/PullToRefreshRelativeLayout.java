@@ -270,7 +270,7 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
             case MotionEvent.ACTION_UP:
                 Log.e(TAG, "onTouchEvent: ACTION_UP");
                 isloadmore = false;
-                isRefresh = false;
+//                isRefresh = false;
 //                dy = 0;
                 disY = 0;
 //                requestLayout();
@@ -289,10 +289,13 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
     private void onRefreshUp() {
         if (dy < mHeaderViewMeasuredHeight) {
             dy = 0;
+            isRefresh = false;
         } else {
             dy = mHeaderViewMeasuredHeight;
             if (mIPullToRefresh != null) {
                 mIPullToRefresh.onRefresh();
+            } else {
+                isRefresh = false;
             }
         }
 
@@ -308,6 +311,7 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
         public void onRefreshResult(IPullToRefreshManager.EPullToRefreshResult ePullToRefreshResult) {
             dy = 0;
             requestLayout();
+            isRefresh = false;
         }
 
         @Override
