@@ -67,6 +67,7 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
 
     private void initView() {
         if (mRecyclerView != null) {
+            IPullToRefreshManager.setiFooterViewManager(iFooterViewManager);
 
             onRecyclerViewItemFinished();
 
@@ -185,18 +186,66 @@ public class PullToRefreshRelativeLayout extends RelativeLayout {
         boolean lastCompleteBoolean = lastCompletelyVisibleItemPosition == recyclerViewLayoutManager.getItemCount() - 1;
         if (lastBoolean) {
             if (lastCompleteBoolean) {//FooterView hide
+                if (IPullToRefreshManager.iFooterViewManager != null) {
 
+                    IPullToRefreshManager.iFooterViewManager.showEmpty();
+                }
 
             } else {// FooterView 显示“没有更多数据了”
 
-
+                if (IPullToRefreshManager.iFooterViewManager != null) {
+                    IPullToRefreshManager.iFooterViewManager.showNone();
+                }
             }
         } else {//FooterView 加载中...
 
-
+            if (IPullToRefreshManager.iFooterViewManager != null) {
+                IPullToRefreshManager.iFooterViewManager.showloading();
+            }
         }
 
     }
+
+    private IPullToRefreshManager.IFooterViewManager iFooterViewManager = new IPullToRefreshManager.IFooterViewManager() {
+        @Override
+        public void showEmpty() {
+            if (recyclerViewLayoutManager == null) {
+                recyclerViewLayoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+            }
+            try {
+                FooterViewManager footerView = (FooterViewManager) recyclerViewLayoutManager.findViewByPosition(recyclerViewLayoutManager.getItemCount() - 1);
+                footerView.showEmpty();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void showNone() {
+            if (recyclerViewLayoutManager == null) {
+                recyclerViewLayoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+            }
+            try {
+                FooterViewManager footerView = (FooterViewManager) recyclerViewLayoutManager.findViewByPosition(recyclerViewLayoutManager.getItemCount() - 1);
+                footerView.showNone();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void showloading() {
+            if (recyclerViewLayoutManager == null) {
+                recyclerViewLayoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+            }
+            try {
+                FooterViewManager footerView = (FooterViewManager) recyclerViewLayoutManager.findViewByPosition(recyclerViewLayoutManager.getItemCount() - 1);
+                footerView.showloading();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };
 
     private void hideFooterView(int dy) {
         if (newStateF == RecyclerView.SCROLL_STATE_DRAGGING) {

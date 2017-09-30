@@ -1,6 +1,5 @@
 package com.gaos.app2;
 
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -21,41 +20,63 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter {
 
     private ArrayList<String> data;
     private static final String TAG = "MyRecyclerViewAdapter";
+    private static final int ITEM_TYPE_FOOTER_VIEW = 100;
+    private static final int ITEM_TYPE_ITEM_NORMAL = 101;
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View inflate = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_demo, parent, false);
-        return new MyViewHolder(inflate);
+        if (viewType == ITEM_TYPE_FOOTER_VIEW) {
+
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.footer_view,parent,false);
+            CommonRecyclerViewVH vh = new CommonRecyclerViewVH(view);
+            return vh;
+        } else {
+            View inflate = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_demo, parent, false);
+            return new MyViewHolder(inflate);
+        }
     }
 
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, final int position) {
 
-        final MyViewHolder myViewHolder = (MyViewHolder) holder;
-        myViewHolder.tvItem.setText(data.get(position));
-        myViewHolder.tvItem.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        if (getItemViewType(position) == ITEM_TYPE_FOOTER_VIEW) {
+            // do nothing
 
-                Toast.makeText(myViewHolder.itemView.getContext(), "" + data.get(position), Toast.LENGTH_SHORT).show();
-            }
-        });
+        } else {
+            final MyViewHolder myViewHolder = (MyViewHolder) holder;
+            myViewHolder.tvItem.setText(data.get(position));
+            myViewHolder.tvItem.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    Toast.makeText(myViewHolder.itemView.getContext(), "" + data.get(position), Toast.LENGTH_SHORT).show();
+                }
+            });
+
+        }
+
     }
 
     @Override
     public int getItemCount() {
-        return data != null ? data.size() : 0;
+        return data != null ? data.size() + 1 : 0;
     }
 
     @Override
-    public void registerAdapterDataObserver(RecyclerView.AdapterDataObserver observer) {
-        super.registerAdapterDataObserver(observer);
+    public int getItemViewType(int position) {
+//        return super.getItemViewType(position);
+//        Log.e(TAG, "getItemViewType: position = " + position);
+        if (position == data.size()) {
+            return ITEM_TYPE_FOOTER_VIEW;
+        } else {
+            return ITEM_TYPE_ITEM_NORMAL;
+        }
     }
-
 
     public void setData(ArrayList<String> data) {
         this.data = data;
     }
+
 
     class MyViewHolder extends RecyclerView.ViewHolder {
 

@@ -31,4 +31,18 @@ public class IPullToRefreshManager {
     public static void setiPullToRefreshResult(IPullToRefreshResult iPullToRefreshResult) {
         IPullToRefreshManager.iPullToRefreshResult = iPullToRefreshResult;
     }
+
+    public interface IFooterViewManager {
+        void showEmpty();
+
+        void showNone();
+
+        void showloading();
+    }
+
+    public static IFooterViewManager iFooterViewManager;
+
+    public static void setiFooterViewManager(IFooterViewManager iFooterViewManager) {
+        IPullToRefreshManager.iFooterViewManager = iFooterViewManager;
+    }
 }
