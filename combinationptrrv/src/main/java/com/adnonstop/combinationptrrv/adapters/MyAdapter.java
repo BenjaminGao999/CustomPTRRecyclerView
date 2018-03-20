@@ -51,6 +51,10 @@ public class MyAdapter extends RecyclerView.Adapter implements IRecyclerViewScro
     private IRecyclerViewLoadMoreData iRecyclerViewLoadMoreData;
     private View footerViewNoMoreData;
 
+    private final int FOOTER_VIEW_LOADING = 0x0010;// footerView当前是loading
+    private final int FOOTER_VIEW_NO_MORE_DATA = 0x0020;// footerView当前是 no more data
+    private int currentFooterView;// 记录当前footerView 状态
+
     @Override
     public void onAttachedToRecyclerView(RecyclerView recyclerView) {
         super.onAttachedToRecyclerView(recyclerView);
@@ -154,15 +158,29 @@ public class MyAdapter extends RecyclerView.Adapter implements IRecyclerViewScro
                 isFullOccupied = false;
 
             } else {
-                mFLFooterContainer.removeAllViews();
-                initFooterViewLoading(mFLFooterContainer);
-                mFLFooterContainer.addView(footerViewLoading);
+                addFooterViewLoading();
                 isFullOccupied = true;
-
             }
 
             previousDataSize = getItemCount();
         }
+
+
+        // 重置FooterView
+        if (isFullOccupied && currentFooterView == FOOTER_VIEW_NO_MORE_DATA) {
+            // 判断最后一条可见条目的position == getItemCount()-1 ???
+            int lVIPosition = layoutManager.findLastVisibleItemPosition();
+            if ((lVIPosition == getItemCount() - 2)) {
+                addFooterViewLoading();
+            }
+        }
+    }
+
+    private void addFooterViewLoading() {
+        mFLFooterContainer.removeAllViews();
+        initFooterViewLoading(mFLFooterContainer);
+        mFLFooterContainer.addView(footerViewLoading);
+        currentFooterView = FOOTER_VIEW_LOADING;
     }
 
 
@@ -203,6 +221,7 @@ public class MyAdapter extends RecyclerView.Adapter implements IRecyclerViewScro
             initFooterViewNoMoreData();
             mFLFooterContainer.removeAllViews();
             mFLFooterContainer.addView(footerViewNoMoreData);
+            currentFooterView = FOOTER_VIEW_NO_MORE_DATA;
         }
     }
 

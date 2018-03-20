@@ -7,12 +7,10 @@ import android.os.Looper;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
 
 
 import com.adnonstop.combinationptrrv.R;
@@ -223,6 +221,8 @@ public class PullToRefreshLayout extends FrameLayout {
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
+                    // TODO: 2018/3/20 执行刷新数据的操作
+
                     onActionUp(rlHeaderViewMeasuredHeight, false);
 
                     getData(4, 0);
