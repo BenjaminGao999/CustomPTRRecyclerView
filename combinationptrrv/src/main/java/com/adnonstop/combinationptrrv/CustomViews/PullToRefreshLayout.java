@@ -7,8 +7,11 @@ import android.os.Looper;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
@@ -29,13 +32,12 @@ import java.util.ArrayList;
 
 public class PullToRefreshLayout extends FrameLayout {
     private static final String TAG = "ItemsLayout";
-    private View inflate;
+    //    private View inflate;
     private ArrayList<String> strings;
     private PullToRefreshAdapter adapter;
-    private BaseRecyclerView recyclerView;
+    //    private BaseRecyclerView recyclerView;
     private int newState;
     private LinearLayoutManager layoutManager;
-    private RelativeLayout rlHeaderView;
     public float dy;
     /*
     * 作为一个flag, 在最开始走onMeasure时， 把 头布局 隐藏起来的，
@@ -45,7 +47,7 @@ public class PullToRefreshLayout extends FrameLayout {
     * 拿到headerView 后， 就都是 true了
     * */
     private boolean isHeaderViewMeasuredGot;
-    private LayoutParams rlHeaderViewLayoutParams;
+    private LayoutParams flHeaderViewLayoutParams;
     private int rlHeaderViewMeasuredHeight;
     private LayoutParams recyclerViewLayoutParams;
     private Handler handler = new Handler(Looper.getMainLooper());
@@ -64,6 +66,8 @@ public class PullToRefreshLayout extends FrameLayout {
     private boolean keepIntercepted;
 
     private float rawY_down;
+    private BaseRecyclerView baseRecyclerView;
+    private RelativeLayout rlHeaderView;
 
 
     public PullToRefreshLayout(Context context) {
@@ -76,18 +80,29 @@ public class PullToRefreshLayout extends FrameLayout {
 
     public PullToRefreshLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        inflate = inflate(context, R.layout.ptr_recycler_view_layout, this);
+//        inflate = inflate(context, R.layout.ptr_recycler_view_layout, this);
+        // header view 可替换
+        rlHeaderView = (RelativeLayout) LayoutInflater.from(context).inflate(R.layout.ptr_header_layout, this, false);
+        rlHeaderView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        addView(rlHeaderView);
+
+        // base recyclerView
+        baseRecyclerView = new BaseRecyclerView(getContext());
+        baseRecyclerView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        addView(baseRecyclerView);
 
         initView();
         setRecyclerViewSettings(context);
         addListener();
         //联网获取数据的过程
         getData(3, 1000);
+
+
     }
 
     private void initView() {
-        rlHeaderView = (RelativeLayout) inflate.findViewById(R.id.ptr_header_view);
-        recyclerView = (BaseRecyclerView) inflate.findViewById(R.id.recycler_view);
+
+
     }
 
     private void setRecyclerViewSettings(final Context context) {
@@ -103,12 +118,12 @@ public class PullToRefreshLayout extends FrameLayout {
                 return super.canScrollHorizontally();
             }
         };
-        recyclerView.setLayoutManager(linearLayoutManager);
+        baseRecyclerView.setLayoutManager(linearLayoutManager);
         adapter = new PullToRefreshAdapter();
-        recyclerView.setAdapter(adapter);
+        baseRecyclerView.setAdapter(adapter);
         strings = new ArrayList<>();
         adapter.setData(strings);
-        recyclerView.addItemDecoration(new ItemDecoration());
+        baseRecyclerView.addItemDecoration(new ItemDecoration());
 //        recyclerView.setOverScrollMode(RecyclerView.OVER_SCROLL_ALWAYS);
 
         adapter.setIRecyclerViewLoadMoreData(new IRecyclerViewLoadMoreData() {
@@ -127,8 +142,8 @@ public class PullToRefreshLayout extends FrameLayout {
     }
 
     private void addListener() {
-        layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
-        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        layoutManager = (LinearLayoutManager) baseRecyclerView.getLayoutManager();
+        baseRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
@@ -146,7 +161,7 @@ public class PullToRefreshLayout extends FrameLayout {
 
         });
 
-        recyclerView.setOnTouchListener(new OnTouchListener() {
+        baseRecyclerView.setOnTouchListener(new OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 adapter.onTouch(v, event);
@@ -163,7 +178,7 @@ public class PullToRefreshLayout extends FrameLayout {
         });
 
 
-        recyclerView.setIRecyclerViewOnDispatchTouchEvent(new IRecyclerViewOnDispatchTouchEvent() {
+        baseRecyclerView.setIRecyclerViewOnDispatchTouchEvent(new IRecyclerViewOnDispatchTouchEvent() {
             @Override
             public void dispatchTouchEvent(MotionEvent ev) {
 
@@ -175,7 +190,7 @@ public class PullToRefreshLayout extends FrameLayout {
             }
         });
 
-        recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
+        baseRecyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
             @Override
             public boolean onFling(int velocityX, int velocityY) {
 //                Log.i(TAG, "onFling: velocityX = " + velocityX + " ; velocityY = " + velocityY);
@@ -213,8 +228,8 @@ public class PullToRefreshLayout extends FrameLayout {
     }
 
     private void onActionUp() {
-        if (rlHeaderViewLayoutParams.topMargin >= 0) {// 刷新
-            final int dy = rlHeaderViewLayoutParams.topMargin;
+        if (flHeaderViewLayoutParams.topMargin >= 0) {// 刷新
+            final int dy = flHeaderViewLayoutParams.topMargin;
             onActionUp(dy, true);
 
             // 加载数据期间， 拦截一切， 触摸事件
@@ -230,7 +245,7 @@ public class PullToRefreshLayout extends FrameLayout {
                 }
             }, 1000);
         } else { // 不刷新
-            int dy = rlHeaderViewLayoutParams.topMargin + rlHeaderViewMeasuredHeight;
+            int dy = flHeaderViewLayoutParams.topMargin + rlHeaderViewMeasuredHeight;
             onActionUp(dy, false);
         }
 
@@ -243,7 +258,7 @@ public class PullToRefreshLayout extends FrameLayout {
     private void onActionUp(final int dy, final boolean keepInterceptedAsync) {
 
         if (dy != 0) {
-            final int topMarginHeaderOrigin = rlHeaderViewLayoutParams.topMargin;
+            final int topMarginHeaderOrigin = flHeaderViewLayoutParams.topMargin;
             final int topMarginRecyclerViewOrigin = recyclerViewLayoutParams.topMargin;
 
             ValueAnimator valueAnimator = ValueAnimator.ofFloat(1).setDuration(200);
@@ -252,13 +267,13 @@ public class PullToRefreshLayout extends FrameLayout {
                 public void onAnimationUpdate(ValueAnimator animation) {
                     float animatedFraction = animation.getAnimatedFraction();
 
-                    rlHeaderViewLayoutParams.topMargin = (int) (topMarginHeaderOrigin - dy * animatedFraction);
+                    flHeaderViewLayoutParams.topMargin = (int) (topMarginHeaderOrigin - dy * animatedFraction);
                     recyclerViewLayoutParams.topMargin = (int) (topMarginRecyclerViewOrigin - dy * animatedFraction);
 
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            recyclerView.requestLayout();
+                            baseRecyclerView.requestLayout();
                         }
                     });
 
@@ -310,10 +325,10 @@ public class PullToRefreshLayout extends FrameLayout {
                     tempTopMargin = 0;
                 }
 
-                rlHeaderViewLayoutParams.topMargin = -rlHeaderViewMeasuredHeight + tempTopMargin;
+                flHeaderViewLayoutParams.topMargin = -rlHeaderViewMeasuredHeight + tempTopMargin;
 
                 recyclerViewLayoutParams.topMargin = tempTopMargin;
-                recyclerView.requestLayout();
+                baseRecyclerView.requestLayout();
 
                 if (tempTopMargin == 0) {
                     return false;
@@ -331,25 +346,25 @@ public class PullToRefreshLayout extends FrameLayout {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-//        Log.i(TAG, "onMeasure: rlHeaderView.getMeasuredHeight() = "+rlHeaderView.getMeasuredHeight());
+//        Log.i(TAG, "onMeasure: mFLHeaderView.getMeasuredHeight() = "+mFLHeaderView.getMeasuredHeight());
         if (!isHeaderViewMeasuredGot) {
-            rlHeaderViewLayoutParams = (LayoutParams) rlHeaderView.getLayoutParams();
+            flHeaderViewLayoutParams = (LayoutParams) rlHeaderView.getLayoutParams();
             rlHeaderViewMeasuredHeight = rlHeaderView.getMeasuredHeight();
-            rlHeaderViewLayoutParams.topMargin = -rlHeaderViewMeasuredHeight;
-            rlHeaderView.setLayoutParams(rlHeaderViewLayoutParams);
+            flHeaderViewLayoutParams.topMargin = -rlHeaderViewMeasuredHeight;
+            rlHeaderView.setLayoutParams(flHeaderViewLayoutParams);
 
             // 初始RecyclerView LayoutParams实例。
-            recyclerViewLayoutParams = (LayoutParams) recyclerView.getLayoutParams();
+            recyclerViewLayoutParams = (LayoutParams) baseRecyclerView.getLayoutParams();
         }
     }
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
-//        Log.i(TAG, "onLayout: rlHeaderView.getMeasuredHeight() = "+rlHeaderView.getMeasuredHeight());
-//        Log.i(TAG, "onLayout: rlHeaderView.getTop() = "+rlHeaderView.getTop());
+//        Log.i(TAG, "onLayout: mFLHeaderView.getMeasuredHeight() = "+mFLHeaderView.getMeasuredHeight());
+//        Log.i(TAG, "onLayout: mFLHeaderView.getTop() = "+mFLHeaderView.getTop());
 //        Log.i(TAG, "onLayout: recyclerView.getTop() = "+recyclerView.getTop());
-//        Log.i(TAG, "onLayout: left = "+left+" ;top = "+top+" ;right = "+right+" ;bottom = "+bottom);
+//        Log.i(TAG, "onLayout: left = " + left + " ;top = " + top + " ;right = " + right + " ;bottom = " + bottom);
     }
 
     private void getData(final int dataSize, final int sleepTime) {

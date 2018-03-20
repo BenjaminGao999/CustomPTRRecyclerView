@@ -5,7 +5,7 @@
 
     <include
         android:id="@+id/ptr_header_view"
-        layout="@layout/item_header_layout"
+        layout="@layout/ptr_header_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"></include>
 
