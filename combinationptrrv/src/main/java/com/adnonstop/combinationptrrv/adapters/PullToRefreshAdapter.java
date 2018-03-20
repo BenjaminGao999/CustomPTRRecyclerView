@@ -24,8 +24,8 @@ import java.util.ArrayList;
  * DATE :  2018/3/14 9:50
  * versionCode:　v2.2
  */
-public class MyAdapter extends RecyclerView.Adapter implements IRecyclerViewScrollListener, IRecyclerViewOnTouchListener, IRecyclerViewLoadMoreDataResult {
-    private static final String TAG = "MyAdapter";
+public class PullToRefreshAdapter extends RecyclerView.Adapter implements IRecyclerViewScrollListener, IRecyclerViewOnTouchListener, IRecyclerViewLoadMoreDataResult {
+    private static final String TAG = "PullToRefreshAdapter";
     private ArrayList<String> data;
     private View itemView;
     private LinearLayoutManager layoutManager;

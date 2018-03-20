@@ -9,13 +9,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"></include>
 
-    <com.adnonstop.combinationptrrv.CustomViews.MyRecyclerView
+    <com.adnonstop.combinationptrrv.CustomViews.BaseRecyclerView
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
 
 
-    </com.adnonstop.combinationptrrv.CustomViews.MyRecyclerView>
+    </com.adnonstop.combinationptrrv.CustomViews.BaseRecyclerView>
 
 </FrameLayout>

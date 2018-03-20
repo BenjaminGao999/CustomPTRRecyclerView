@@ -14,7 +14,7 @@ import android.widget.RelativeLayout;
 
 
 import com.adnonstop.combinationptrrv.R;
-import com.adnonstop.combinationptrrv.adapters.MyAdapter;
+import com.adnonstop.combinationptrrv.adapters.PullToRefreshAdapter;
 import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewOnDispatchTouchEvent;
 import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewLoadMoreData;
 import com.adnonstop.combinationptrrv.utils.Dp2px;
@@ -31,8 +31,8 @@ public class PullToRefreshLayout extends FrameLayout {
     private static final String TAG = "ItemsLayout";
     private View inflate;
     private ArrayList<String> strings;
-    private MyAdapter adapter;
-    private MyRecyclerView recyclerView;
+    private PullToRefreshAdapter adapter;
+    private BaseRecyclerView recyclerView;
     private int newState;
     private LinearLayoutManager layoutManager;
     private RelativeLayout rlHeaderView;
@@ -87,7 +87,7 @@ public class PullToRefreshLayout extends FrameLayout {
 
     private void initView() {
         rlHeaderView = (RelativeLayout) inflate.findViewById(R.id.ptr_header_view);
-        recyclerView = (MyRecyclerView) inflate.findViewById(R.id.recycler_view);
+        recyclerView = (BaseRecyclerView) inflate.findViewById(R.id.recycler_view);
     }
 
     private void setRecyclerViewSettings(final Context context) {
@@ -104,7 +104,7 @@ public class PullToRefreshLayout extends FrameLayout {
             }
         };
         recyclerView.setLayoutManager(linearLayoutManager);
-        adapter = new MyAdapter();
+        adapter = new PullToRefreshAdapter();
         recyclerView.setAdapter(adapter);
         strings = new ArrayList<>();
         adapter.setData(strings);

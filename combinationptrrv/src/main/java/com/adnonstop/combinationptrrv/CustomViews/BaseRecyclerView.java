@@ -15,23 +15,25 @@ import com.adnonstop.combinationptrrv.utils.Dp2px;
  * Author:　Created by benjamin
  * DATE :  2018/3/19 18:30
  * versionCode:　v2.2
+ * <p>
+ * 实现 dispatchTouchEvent 事件传递给父布局
  */
 
-public class MyRecyclerView extends RecyclerView implements View.OnTouchListener {
+public class BaseRecyclerView extends RecyclerView implements View.OnTouchListener {
     private static final String TAG = "MyRecyclerView";
     private float rawY_down;
     private float dy;
     private IRecyclerViewOnDispatchTouchEvent iRecyclerViewOnDispatchTouchEvent;
 
-    public MyRecyclerView(Context context) {
+    public BaseRecyclerView(Context context) {
         this(context, null);
     }
 
-    public MyRecyclerView(Context context, @Nullable AttributeSet attrs) {
+    public BaseRecyclerView(Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, -1);
     }
 
-    public MyRecyclerView(Context context, @Nullable AttributeSet attrs, int defStyle) {
+    public BaseRecyclerView(Context context, @Nullable AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         setOnTouchListener(this);
     }
