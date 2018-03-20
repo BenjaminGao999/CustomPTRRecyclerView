@@ -45,3 +45,17 @@
         printMotionEvent(ev);
         return super.dispatchTouchEvent(ev);
     }
+
+
+# 检测松手时的speed
+
+|||
+  recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
+            @Override
+            public boolean onFling(int velocityX, int velocityY) {
+//                Log.i(TAG, "onFling: velocityX = " + velocityX + " ; velocityY = " + velocityY);
+//                PullToRefreshLayout.this.velocityY = velocityY;
+                return false;
+            }
+        });
+

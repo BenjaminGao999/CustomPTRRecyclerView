@@ -137,13 +137,14 @@ public class PullToRefreshLayout extends FrameLayout {
             public boolean onTouch(View v, MotionEvent event) {
                 adapter.onTouch(v, event);
 
-                printMotionEvent(event);
+//                printMotionEvent(event);
 
                 if (keepIntercepted) {
                     return true;
                 } else {
                     return calculationDy(event);
                 }
+
             }
         });
 
@@ -157,6 +158,15 @@ public class PullToRefreshLayout extends FrameLayout {
                     rawY_down = ev.getRawY();
                     isTriggered = false;
                 }
+            }
+        });
+
+        recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
+            @Override
+            public boolean onFling(int velocityX, int velocityY) {
+//                Log.i(TAG, "onFling: velocityX = " + velocityX + " ; velocityY = " + velocityY);
+//                PullToRefreshLayout.this.velocityY = velocityY;
+                return false;
             }
         });
     }
@@ -176,6 +186,10 @@ public class PullToRefreshLayout extends FrameLayout {
             case MotionEvent.ACTION_UP:
                 onActionUp();
 
+//                if (isTriggered) {
+//                    return true;
+//                }
+
                 break;
             default:
                 break;
@@ -186,35 +200,24 @@ public class PullToRefreshLayout extends FrameLayout {
 
     private void onActionUp() {
         if (rlHeaderViewLayoutParams.topMargin >= 0) {// 刷新
-//                    rlHeaderViewLayoutParams.topMargin = 0;
-//                    recyclerViewLayoutParams.topMargin = rlHeaderViewMeasuredHeight;
             final int dy = rlHeaderViewLayoutParams.topMargin;
             onActionUp(dy, true);
 
             // 加载数据期间， 拦截一切， 触摸事件
-//                    keepIntercepted = true;
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-
-//                            rlHeaderViewLayoutParams.topMargin = -rlHeaderViewMeasuredHeight;
-//                            recyclerViewLayoutParams.topMargin = 0;
-//                            recyclerView.requestLayout();
-
                     onActionUp(rlHeaderViewMeasuredHeight, false);
-//                            keepIntercepted = false;
+
                     getData(4, 0);
 
                 }
             }, 1000);
-
         } else { // 不刷新
-//                    rlHeaderViewLayoutParams.topMargin = -rlHeaderViewMeasuredHeight;
-//                    recyclerViewLayoutParams.topMargin = 0;
-//                    recyclerView.requestLayout();
             int dy = rlHeaderViewLayoutParams.topMargin + rlHeaderViewMeasuredHeight;
             onActionUp(dy, false);
         }
+
     }
 
     /**
@@ -232,7 +235,6 @@ public class PullToRefreshLayout extends FrameLayout {
                 @Override
                 public void onAnimationUpdate(ValueAnimator animation) {
                     float animatedFraction = animation.getAnimatedFraction();
-//                            Log.i(TAG, "onAnimationUpdate: "+animatedFraction);
 
                     rlHeaderViewLayoutParams.topMargin = (int) (topMarginHeaderOrigin - dy * animatedFraction);
                     recyclerViewLayoutParams.topMargin = (int) (topMarginRecyclerViewOrigin - dy * animatedFraction);
@@ -284,23 +286,26 @@ public class PullToRefreshLayout extends FrameLayout {
                 dy = 0;
             }
 
-            if (dy > Dp2px.dp2px(0, getContext()) && isTriggered) {
-//                            Log.i(TAG, "onDraggingLis: 可以下拉了");
-                rlHeaderViewLayoutParams.topMargin = (int) (-rlHeaderViewMeasuredHeight + (dy / 1.5f));
-//                            rlHeaderView.setLayoutParams(params);
-//                            Log.i(TAG, "onDraggingLis: " + params.topMargin);
-//                            rlHeaderView.requestLayout();
 
-                recyclerViewLayoutParams.topMargin = (int) (dy / 1.5f);
+            if (isTriggered) {
+
+                int tempTopMargin = (int) (dy / 1.5f);
+                if ((tempTopMargin < 0)) {
+                    tempTopMargin = 0;
+                }
+
+                rlHeaderViewLayoutParams.topMargin = -rlHeaderViewMeasuredHeight + tempTopMargin;
+
+                recyclerViewLayoutParams.topMargin = tempTopMargin;
                 recyclerView.requestLayout();
 
-                return true;
-
-            } else if (dy <= Dp2px.dp2px(0, getContext()) && isHeaderViewMeasuredGot && isTriggered) {
-                rlHeaderViewLayoutParams.topMargin = -rlHeaderViewMeasuredHeight;
-                recyclerViewLayoutParams.topMargin = 0;
-                rlHeaderView.requestLayout();
+                if (tempTopMargin == 0) {
+                    return false;
+                } else {
+                    return true;
+                }
             }
+
         }
 
         return false;
