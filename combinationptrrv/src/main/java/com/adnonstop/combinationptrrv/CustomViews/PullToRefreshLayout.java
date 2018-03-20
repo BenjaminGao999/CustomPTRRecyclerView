@@ -7,15 +7,12 @@ import android.os.Looper;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.RelativeLayout;
 
 
-import com.adnonstop.combinationptrrv.R;
 import com.adnonstop.combinationptrrv.adapters.PullToRefreshAdapter;
 import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewDataChanged;
 import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewInitData;
@@ -32,8 +29,8 @@ import java.util.ArrayList;
  * versionCode:　v2.2
  */
 
-public class PullToRefreshLayout extends FrameLayout implements IRecyclerViewDataChanged<ArrayList<String>>, IRecyclerViewInitData<ArrayList<String>> {
-    private static final String TAG = "ItemsLayout";
+public abstract class PullToRefreshLayout extends FrameLayout implements IRecyclerViewDataChanged<ArrayList<String>>, IRecyclerViewInitData<ArrayList<String>> {
+    private static final String TAG = "PullToRefreshLayout";
     //    private View inflate;
     private ArrayList<String> strings;
     private PullToRefreshAdapter adapter;
@@ -69,9 +66,9 @@ public class PullToRefreshLayout extends FrameLayout implements IRecyclerViewDat
 
     private float rawY_down;
     private BaseRecyclerView baseRecyclerView;
-    private RelativeLayout rlHeaderView;
     private IRecyclerViewLoadMoreData iRecyclerViewLoadMoreData;
     private IRecyclerViewRefreshData iRecyclerViewRefreshData;
+    private View mHeaderView;
 
 
     public PullToRefreshLayout(Context context) {
@@ -86,9 +83,7 @@ public class PullToRefreshLayout extends FrameLayout implements IRecyclerViewDat
         super(context, attrs, defStyleAttr);
 //        inflate = inflate(context, R.layout.ptr_recycler_view_layout, this);
         // header view 可替换
-        rlHeaderView = (RelativeLayout) LayoutInflater.from(context).inflate(R.layout.ptr_header_layout, this, false);
-        rlHeaderView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        addView(rlHeaderView);
+        mHeaderView = addHeaderView();
 
         // base recyclerView
         baseRecyclerView = new BaseRecyclerView(getContext());
@@ -100,6 +95,14 @@ public class PullToRefreshLayout extends FrameLayout implements IRecyclerViewDat
         addListener();
 
     }
+
+    /**
+     * 实现对 headerView 的定制
+     *
+     * @return mHeaderView
+     */
+    protected abstract View addHeaderView();
+
 
     private void initView() {
 
@@ -356,10 +359,10 @@ public class PullToRefreshLayout extends FrameLayout implements IRecyclerViewDat
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 //        Log.i(TAG, "onMeasure: mFLHeaderView.getMeasuredHeight() = "+mFLHeaderView.getMeasuredHeight());
         if (!isHeaderViewMeasuredGot) {
-            flHeaderViewLayoutParams = (LayoutParams) rlHeaderView.getLayoutParams();
-            rlHeaderViewMeasuredHeight = rlHeaderView.getMeasuredHeight();
+            flHeaderViewLayoutParams = (LayoutParams) mHeaderView.getLayoutParams();
+            rlHeaderViewMeasuredHeight = mHeaderView.getMeasuredHeight();
             flHeaderViewLayoutParams.topMargin = -rlHeaderViewMeasuredHeight;
-            rlHeaderView.setLayoutParams(flHeaderViewLayoutParams);
+            mHeaderView.setLayoutParams(flHeaderViewLayoutParams);
 
             // 初始RecyclerView LayoutParams实例。
             recyclerViewLayoutParams = (LayoutParams) baseRecyclerView.getLayoutParams();

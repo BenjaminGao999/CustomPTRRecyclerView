@@ -9,6 +9,7 @@ import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.adnonstop.combinationptrrv.CustomViews.PullToRefreshLayout;
+import com.adnonstop.combinationptrrv.CustomViews.PullToRefreshLayoutDemo;
 import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewLoadMoreData;
 import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewRefreshData;
 
@@ -36,9 +37,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void addPullToRefreshLayout(FrameLayout mFLContainer) {
         if (pullToRefreshLayout == null) {
-            pullToRefreshLayout = new PullToRefreshLayout(this);
+            pullToRefreshLayout = new PullToRefreshLayoutDemo(this);
         }
         pullToRefreshLayout.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+
         mFLContainer.removeAllViews();
         mFLContainer.addView(pullToRefreshLayout);
 
@@ -75,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
         // 初始化数据
         getData(6);
         handler.postDelayed(new Runnable() {
@@ -93,6 +96,5 @@ public class MainActivity extends AppCompatActivity {
             strings.add("item " + i);
         }
     }
-
 
 }
