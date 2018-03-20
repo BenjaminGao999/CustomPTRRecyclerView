@@ -12,11 +12,13 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 
 import com.adnonstop.combinationptrrv.R;
 import com.adnonstop.combinationptrrv.adapters.MyAdapter;
 import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewOnDispatchTouchEvent;
+import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewLoadMoreData;
 import com.adnonstop.combinationptrrv.utils.Dp2px;
 
 import java.util.ArrayList;
@@ -82,7 +84,7 @@ public class PullToRefreshLayout extends FrameLayout {
         setRecyclerViewSettings(context);
         addListener();
         //联网获取数据的过程
-        getData(30, 1000);
+        getData(3, 1000);
     }
 
     private void initView() {
@@ -110,6 +112,20 @@ public class PullToRefreshLayout extends FrameLayout {
         adapter.setData(strings);
         recyclerView.addItemDecoration(new ItemDecoration());
 //        recyclerView.setOverScrollMode(RecyclerView.OVER_SCROLL_ALWAYS);
+
+        adapter.setIRecyclerViewLoadMoreData(new IRecyclerViewLoadMoreData() {
+            @Override
+            public void loadMoreData() {
+                // TODO: 2018/3/20  加载更多数据
+//                Toast.makeText(context, "加载更多数据", Toast.LENGTH_SHORT).show();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        adapter.onLoadMoreDataResult(null);
+                    }
+                }, 200);
+            }
+        });
     }
 
     private void addListener() {
@@ -311,42 +327,6 @@ public class PullToRefreshLayout extends FrameLayout {
         return false;
     }
 
-
-    private void printMotionEvent(MotionEvent event) {
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                Log.i(TAG, "printMotionEvent: MotionEvent.ACTION_DOWN:");
-
-                break;
-            case MotionEvent.ACTION_MOVE:
-                Log.i(TAG, "printMotionEvent: MotionEvent.ACTION_MOVE:");
-
-                break;
-            case MotionEvent.ACTION_UP:
-                Log.i(TAG, "printMotionEvent: MotionEvent.ACTION_UP: ");
-
-                break;
-            default:
-                break;
-        }
-    }
-
-    private void printNewState(int newState) {
-        switch (newState) {
-            case RecyclerView.SCROLL_STATE_DRAGGING:
-                Log.i(TAG, "printNewState: RecyclerView.SCROLL_STATE_DRAGGING:");
-
-                break;
-            case RecyclerView.SCROLL_STATE_IDLE:
-                Log.i(TAG, "printNewState: RecyclerView.SCROLL_STATE_IDLE:");
-
-                break;
-            case RecyclerView.SCROLL_STATE_SETTLING:
-                Log.i(TAG, "printNewState: RecyclerView.SCROLL_STATE_SETTLING:");
-
-                break;
-        }
-    }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {

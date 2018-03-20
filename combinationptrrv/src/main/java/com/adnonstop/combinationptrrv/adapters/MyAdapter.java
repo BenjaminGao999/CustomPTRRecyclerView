@@ -7,14 +7,15 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.RelativeLayout;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.adnonstop.combinationptrrv.R;
+import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewLoadMoreDataResult;
 import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewOnTouchListener;
 import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewScrollListener;
-import com.adnonstop.combinationptrrv.utils.Dp2px;
+import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewLoadMoreData;
 
 import java.util.ArrayList;
 
@@ -23,10 +24,9 @@ import java.util.ArrayList;
  * DATE :  2018/3/14 9:50
  * versionCode:　v2.2
  */
-public class MyAdapter extends RecyclerView.Adapter implements IRecyclerViewScrollListener, IRecyclerViewOnTouchListener {
+public class MyAdapter extends RecyclerView.Adapter implements IRecyclerViewScrollListener, IRecyclerViewOnTouchListener, IRecyclerViewLoadMoreDataResult {
     private static final String TAG = "MyAdapter";
     private ArrayList<String> data;
-    private RelativeLayout footerItem;
     private View itemView;
     private LinearLayoutManager layoutManager;
     private float dy;
@@ -46,6 +46,10 @@ public class MyAdapter extends RecyclerView.Adapter implements IRecyclerViewScro
     * 就做一次是否永久隐藏 FooterView的判断。
     * */
     private int previousDataSize;
+    private FrameLayout mFLFooterContainer;
+    private View footerViewLoading;
+    private IRecyclerViewLoadMoreData iRecyclerViewLoadMoreData;
+    private View footerViewNoMoreData;
 
     @Override
     public void onAttachedToRecyclerView(RecyclerView recyclerView) {
@@ -56,24 +60,18 @@ public class MyAdapter extends RecyclerView.Adapter implements IRecyclerViewScro
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View temp = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_items_layout, parent, false);
 
-        switch (viewType) {
-            case ITEM:
-                itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_items_layout, parent, false);
-                temp = itemView;
-                break;
-            case FOOTER:
-                footerItem = (RelativeLayout) LayoutInflater.from(parent.getContext()).inflate(R.layout.item_footer_layout, parent, false);
-                temp = footerItem;
-                footerItem.setLayoutParams(new ViewGroup.LayoutParams(0, 0));
-                break;
-            default:
-                break;
+        if (viewType == ITEM) {
+            itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_items_layout, parent, false);
+            return new InnerViewHolder(itemView);
+        } else {
+
+            initFooterViewContainer(parent);
+            return new FooterViewHolder(mFLFooterContainer);
         }
 
-        return new InnerViewHolder(temp);
     }
+
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
@@ -85,7 +83,7 @@ public class MyAdapter extends RecyclerView.Adapter implements IRecyclerViewScro
                 @Override
                 public void onClick(View v) {
 
-                    Toast.makeText(holder1.itemView.getContext(), ""+data.get(position), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(holder1.itemView.getContext(), "" + data.get(position), Toast.LENGTH_SHORT).show();
                 }
             });
         } else if (getItemViewType(position) == FOOTER) {
@@ -94,15 +92,6 @@ public class MyAdapter extends RecyclerView.Adapter implements IRecyclerViewScro
 
     }
 
-    /**
-     * 直接这样写， 会有跳动, 因为要把上面的条目顶上去的
-     */
-    private void showFooterItem() {
-        RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) footerItem.getLayoutParams();
-        params.width = ViewGroup.LayoutParams.MATCH_PARENT;
-        params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
-        footerItem.setLayoutParams(params);
-    }
 
     @Override
     public int getItemCount() {
@@ -126,8 +115,6 @@ public class MyAdapter extends RecyclerView.Adapter implements IRecyclerViewScro
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-//        printMotionEvent(event);
-        calculationDy(event);
 
         return false;
     }
@@ -136,6 +123,19 @@ public class MyAdapter extends RecyclerView.Adapter implements IRecyclerViewScro
     public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
 //        printNewState(newState);
         this.newState = newState;
+
+        if (newState == RecyclerView.SCROLL_STATE_IDLE && isFullOccupied) {
+            // 判断最后一条可见条目的position == getItemCount()-1 ???
+            int lVIPosition = layoutManager.findLastVisibleItemPosition();
+//        Log.i(TAG, "onScrolled: lVIPosition = "+lVIPosition);
+            if (lVIPosition == getItemCount() - 1) {// 加载更多数据
+                if (iRecyclerViewLoadMoreData != null) {
+                    iRecyclerViewLoadMoreData.loadMoreData();
+                }
+
+
+            }
+        }
     }
 
     @Override
@@ -147,100 +147,65 @@ public class MyAdapter extends RecyclerView.Adapter implements IRecyclerViewScro
             // 判断最后一条可见条目的position == getItemCount()-1 ???
             int lVIPosition = layoutManager.findLastVisibleItemPosition();
 //        Log.i(TAG, "onScrolled: lVIPosition = "+lVIPosition);
+
+            initFooterViewContainer(recyclerView);
             if (lVIPosition == getItemCount() - 1) {// 总数据量占不满全屏， 不要 show footerView了
+                mFLFooterContainer.removeAllViews();
                 isFullOccupied = false;
+
             } else {
+                mFLFooterContainer.removeAllViews();
+                initFooterViewLoading(mFLFooterContainer);
+                mFLFooterContainer.addView(footerViewLoading);
                 isFullOccupied = true;
+
             }
+
             previousDataSize = getItemCount();
         }
     }
 
 
-    private void printNewState(int newState) {
-        switch (newState) {
-            case RecyclerView.SCROLL_STATE_DRAGGING:
-                Log.i(TAG, "printNewState: RecyclerView.SCROLL_STATE_DRAGGING:");
+    public void setIRecyclerViewLoadMoreData(IRecyclerViewLoadMoreData iRecyclerViewLoadMoreData) {
+        this.iRecyclerViewLoadMoreData = iRecyclerViewLoadMoreData;
+    }
 
-                break;
-            case RecyclerView.SCROLL_STATE_IDLE:
-                Log.i(TAG, "printNewState: RecyclerView.SCROLL_STATE_IDLE:");
 
-                break;
-            case RecyclerView.SCROLL_STATE_SETTLING:
-                Log.i(TAG, "printNewState: RecyclerView.SCROLL_STATE_SETTLING:");
-
-                break;
+    private void initFooterViewContainer(ViewGroup parent) {
+        if (mFLFooterContainer == null) {
+            mFLFooterContainer = new FrameLayout(parent.getContext());
+            mFLFooterContainer.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
     }
 
-    private void calculationDy(MotionEvent event) {
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                dy = 0;
-                rawY_down = event.getRawY();
-
-                break;
-            case MotionEvent.ACTION_MOVE:
-                float rawY_move = event.getRawY();
-                dy += rawY_move - rawY_down;
-                rawY_down = rawY_move;
-
-                onDraggingLis(newState);
-
-                break;
-            case MotionEvent.ACTION_UP:
-
-                break;
-            default:
-                break;
-
+    private void initFooterViewLoading(FrameLayout mFLFooterContainer) {
+        if (footerViewLoading == null) {
+            footerViewLoading = LayoutInflater.from(mFLFooterContainer.getContext()).inflate(R.layout.ptr_footer_loading_layout, mFLFooterContainer, false);
+            footerViewLoading.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
     }
 
-    private void printMotionEvent(MotionEvent event) {
-        switch (event.getAction()) {
-
-            case MotionEvent.ACTION_DOWN:
-                Log.i(TAG, "printMotionEvent: MotionEvent.ACTION_DOWN:");
-
-                break;
-            case MotionEvent.ACTION_MOVE:
-                Log.i(TAG, "printMotionEvent: MotionEvent.ACTION_MOVE:");
-
-                break;
-            case MotionEvent.ACTION_UP:
-                Log.i(TAG, "printMotionEvent: MotionEvent.ACTION_UP: ");
-
-                break;
-            default:
-                break;
+    private void initFooterViewNoMoreData() {
+        mFLFooterContainer.removeAllViews();
+        if (footerViewNoMoreData == null) {
+            footerViewNoMoreData = LayoutInflater.from(mFLFooterContainer.getContext()).inflate(R.layout.ptr_footer_no_more_data_layout, mFLFooterContainer, false);
+            footerViewNoMoreData.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
     }
 
-    private void onDraggingLis(int newState) {
+    @Override
+    public void onLoadMoreDataResult(Object data) {
+        if (data != null) {// 添加数据，并刷新
 
-        // 上拉加载更多
-        //1. newState是Dragging
-        //2. 上拉
-        //3. 最后一条完全可见条目在 那个坐标区域。
 
-        if (isFullOccupied) {
-            int lCVIPosition = layoutManager.findLastCompletelyVisibleItemPosition();
-//                    Log.i(TAG, "onDraggingLis: "+lCVIPosition);
-
-            if (lCVIPosition == layoutManager.getItemCount() - 1) {
-                if (footerItem != null && footerItem.getMeasuredHeight() == 0) {
-                    if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
-                        if ((dy < -Dp2px.dp2px(10, recyclerView.getContext()))) {
-                            showFooterItem();
-
-                        }
-                    }
-                }
-            }
+        } else {
+            initFooterViewContainer(recyclerView);
+            initFooterViewNoMoreData();
+            mFLFooterContainer.removeAllViews();
+            mFLFooterContainer.addView(footerViewNoMoreData);
         }
     }
+
 
     private class InnerViewHolder extends RecyclerView.ViewHolder {
 
@@ -253,6 +218,11 @@ public class MyAdapter extends RecyclerView.Adapter implements IRecyclerViewScro
     }
 
 
+    private class FooterViewHolder extends RecyclerView.ViewHolder {
+        public FooterViewHolder(View view) {
+            super(view);
+        }
+    }
 }
 
 
