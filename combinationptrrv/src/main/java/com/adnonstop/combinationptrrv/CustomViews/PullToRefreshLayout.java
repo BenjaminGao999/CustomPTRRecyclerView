@@ -7,7 +7,6 @@ import android.os.Looper;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -18,8 +17,11 @@ import android.widget.RelativeLayout;
 
 import com.adnonstop.combinationptrrv.R;
 import com.adnonstop.combinationptrrv.adapters.PullToRefreshAdapter;
+import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewDataChanged;
+import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewInitData;
 import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewOnDispatchTouchEvent;
 import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewLoadMoreData;
+import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewRefreshData;
 import com.adnonstop.combinationptrrv.utils.Dp2px;
 
 import java.util.ArrayList;
@@ -30,7 +32,7 @@ import java.util.ArrayList;
  * versionCode:　v2.2
  */
 
-public class PullToRefreshLayout extends FrameLayout {
+public class PullToRefreshLayout extends FrameLayout implements IRecyclerViewDataChanged<ArrayList<String>>, IRecyclerViewInitData<ArrayList<String>> {
     private static final String TAG = "ItemsLayout";
     //    private View inflate;
     private ArrayList<String> strings;
@@ -68,6 +70,8 @@ public class PullToRefreshLayout extends FrameLayout {
     private float rawY_down;
     private BaseRecyclerView baseRecyclerView;
     private RelativeLayout rlHeaderView;
+    private IRecyclerViewLoadMoreData iRecyclerViewLoadMoreData;
+    private IRecyclerViewRefreshData iRecyclerViewRefreshData;
 
 
     public PullToRefreshLayout(Context context) {
@@ -94,9 +98,6 @@ public class PullToRefreshLayout extends FrameLayout {
         initView();
         setRecyclerViewSettings(context);
         addListener();
-        //联网获取数据的过程
-        getData(3, 1000);
-
 
     }
 
@@ -129,14 +130,19 @@ public class PullToRefreshLayout extends FrameLayout {
         adapter.setIRecyclerViewLoadMoreData(new IRecyclerViewLoadMoreData() {
             @Override
             public void loadMoreData() {
-                // TODO: 2018/3/20  加载更多数据
+
 //                Toast.makeText(context, "加载更多数据", Toast.LENGTH_SHORT).show();
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        adapter.onLoadMoreDataResult(null);
-                    }
-                }, 200);
+//                handler.postDelayed(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        adapter.onLoadMoreDataResult(null);
+//                    }
+//                }, 200);
+
+                // TODO: 2018/3/20  加载更多数据
+                if (iRecyclerViewLoadMoreData != null) {
+                    iRecyclerViewLoadMoreData.loadMoreData();
+                }
             }
         });
     }
@@ -233,17 +239,19 @@ public class PullToRefreshLayout extends FrameLayout {
             onActionUp(dy, true);
 
             // 加载数据期间， 拦截一切， 触摸事件
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    // TODO: 2018/3/20 执行刷新数据的操作
+//            handler.postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    onActionUp(rlHeaderViewMeasuredHeight, false);
+//                    getData(4, 0);
+//                }
+//            }, 1000);
 
-                    onActionUp(rlHeaderViewMeasuredHeight, false);
+            // TODO: 2018/3/20 执行刷新数据的操作
+            if (iRecyclerViewRefreshData != null) {
+                iRecyclerViewRefreshData.refreshData();
+            }
 
-                    getData(4, 0);
-
-                }
-            }, 1000);
         } else { // 不刷新
             int dy = flHeaderViewLayoutParams.topMargin + rlHeaderViewMeasuredHeight;
             onActionUp(dy, false);
@@ -367,33 +375,34 @@ public class PullToRefreshLayout extends FrameLayout {
 //        Log.i(TAG, "onLayout: left = " + left + " ;top = " + top + " ;right = " + right + " ;bottom = " + bottom);
     }
 
-    private void getData(final int dataSize, final int sleepTime) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-                // 模拟加载数据延迟
-                try {
-                    Thread.sleep(sleepTime);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                for (int i = 0; i < dataSize; i++) {
-                    strings.add("item " + i);
-                }
-
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        adapter.setData(strings);
-                        adapter.notifyDataSetChanged();
-                    }
-                });
-
-            }
-        }).start();
-
+    public void setIRecyclerViewLoadMoreData(IRecyclerViewLoadMoreData iRecyclerViewLoadMoreData) {
+        this.iRecyclerViewLoadMoreData = iRecyclerViewLoadMoreData;
     }
 
+    public void setIRecyclerViewRefreshData(IRecyclerViewRefreshData iRecyclerViewRefreshData) {
+        this.iRecyclerViewRefreshData = iRecyclerViewRefreshData;
+    }
+
+
+    @Override
+    public void onDataRefreshed(ArrayList<String> strings) {
+        // 执行刷新数据
+        onActionUp(rlHeaderViewMeasuredHeight, false);// 隐藏刷新头
+
+        adapter.onDataRefreshed(strings);
+    }
+
+    @Override
+    public void onLoadMoreDataResult(ArrayList<String> strings) {
+        // 执行加载更多数据
+        adapter.onLoadMoreDataResult(strings);
+    }
+
+
+    @Override
+    public void initData(ArrayList<String> strings) {
+        // 初始化数据接口
+        adapter.setData(strings);
+        adapter.notifyDataSetChanged();
+    }
 }

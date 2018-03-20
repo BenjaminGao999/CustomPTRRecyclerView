@@ -12,7 +12,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.adnonstop.combinationptrrv.R;
-import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewLoadMoreDataResult;
+import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewDataChanged;
 import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewOnTouchListener;
 import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewScrollListener;
 import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewLoadMoreData;
@@ -24,7 +24,7 @@ import java.util.ArrayList;
  * DATE :  2018/3/14 9:50
  * versionCode:　v2.2
  */
-public class PullToRefreshAdapter extends RecyclerView.Adapter implements IRecyclerViewScrollListener, IRecyclerViewOnTouchListener, IRecyclerViewLoadMoreDataResult {
+public class PullToRefreshAdapter extends RecyclerView.Adapter implements IRecyclerViewScrollListener, IRecyclerViewOnTouchListener, IRecyclerViewDataChanged<ArrayList<String>> {
     private static final String TAG = "PullToRefreshAdapter";
     private ArrayList<String> data;
     private View itemView;
@@ -211,10 +211,18 @@ public class PullToRefreshAdapter extends RecyclerView.Adapter implements IRecyc
         }
     }
 
-    @Override
-    public void onLoadMoreDataResult(Object data) {
-        if (data != null) {// 添加数据，并刷新
 
+    @Override
+    public void onDataRefreshed(ArrayList<String> strings) {
+        data = strings;
+        notifyDataSetChanged();
+    }
+
+    @Override
+    public void onLoadMoreDataResult(ArrayList<String> strings) {
+        if (data != null) {// 添加数据，并刷新
+            data.addAll(strings);
+            notifyDataSetChanged();
 
         } else {
             initFooterViewContainer(recyclerView);
