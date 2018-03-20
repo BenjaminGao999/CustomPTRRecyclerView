@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context="com.adnonstop.combinationptrrv.MainActivity">
 
-    <com.adnonstop.combinationptrrv.CustomViews.ItemsLayout
+    <com.adnonstop.combinationptrrv.CustomViews.PullToRefreshLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 </RelativeLayout>

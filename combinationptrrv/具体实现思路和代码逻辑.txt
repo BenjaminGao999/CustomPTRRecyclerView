@@ -1,0 +1,47 @@
+总体的思路是在 MyAdapter中实现对 FooterView的显示和隐藏控制， 在ItemsLayout这个容器包裹中实现对 HeaderView的显示和隐藏控制的。
+
+# 我在Recycler中实现OnTouchListener接口
+然后
+ public MyRecyclerView(Context context, @Nullable AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+        setOnTouchListener(this);
+    }
+
+ OnTouchListener
+ |||| return true
+ 就会拦截事件传递到
+ @Override
+     public boolean onTouchEvent(MotionEvent e) {
+         printMotionEvent(e);
+         return super.onTouchEvent(e);
+     }
+
+
+
+# MotionEvent传递的路径是
+ ||| dispatchTouchEvent
+        ||| li.onTouchListener.onTouch
+               ||| onTouchEvent
+
+
+
+# 下拉刷新
+
+解决RecyclerView的向上条目滑动和headerView向上平移 同时发生的情况
+
+由于此时 RecyclerView本身的position也在向上平移， 其中的条目也在向上平移， 就会导致条目的向上跳跃， 有一种卡顿感
+
+如何解决呢？
+
+
+# Item设置点击事件
+当RecyclerView在onFling状态时是可以拿到down事件的
+但是当RecyclerView从静止态， 拿不到down事件
+
+不过可以在dispatchTouchEvent中拿到down事件
+
+  @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        printMotionEvent(ev);
+        return super.dispatchTouchEvent(ev);
+    }
