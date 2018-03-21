@@ -7,6 +7,7 @@ import android.os.Looper;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +22,7 @@ import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewLoadMoreData;
 import com.adnonstop.combinationptrrv.interfaces.IRecyclerViewRefreshData;
 import com.adnonstop.combinationptrrv.utils.Dp2px;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 
 /**
@@ -69,6 +71,18 @@ public abstract class PullToRefreshLayout extends FrameLayout implements IRecycl
     private IRecyclerViewLoadMoreData iRecyclerViewLoadMoreData;
     private IRecyclerViewRefreshData iRecyclerViewRefreshData;
     private View mHeaderView;
+    /*
+    *
+    * 有个问题， 反复的下拉，上滑， 会积累差值，
+    * 当headerView 完全隐藏时， 整个列表会向上跳动，积累的差值越大， 列表向上跳动的值就越大。
+    *
+    * 解决方案
+    *通过反射拿到 mLastTouchY
+    * 把mLastTouchY 重置
+    *
+    * 这是个是否开启重置的标识位
+    * */
+    private boolean isResetNeeded;
 
 
     public PullToRefreshLayout(Context context) {
@@ -219,7 +233,7 @@ public abstract class PullToRefreshLayout extends FrameLayout implements IRecycl
                 dy += rawY_move - rawY_down;
                 rawY_down = rawY_move;
 
-                return onDraggingLis(newState);
+                return onDraggingLis(newState, event);
 
             case MotionEvent.ACTION_UP:
                 onActionUp();
@@ -303,7 +317,7 @@ public abstract class PullToRefreshLayout extends FrameLayout implements IRecycl
     }
 
 
-    private boolean onDraggingLis(int newState) {
+    private boolean onDraggingLis(int newState, MotionEvent event) {
 
         // 上拉加载更多
         //1. newState是Dragging
@@ -342,8 +356,12 @@ public abstract class PullToRefreshLayout extends FrameLayout implements IRecycl
                 baseRecyclerView.requestLayout();
 
                 if (tempTopMargin == 0) {
+                    resetRecyclerViewFieldmLastTouchY(event);
                     return false;
+
                 } else {
+                    isResetNeeded = true;
+
                     return true;
                 }
             }
@@ -351,6 +369,27 @@ public abstract class PullToRefreshLayout extends FrameLayout implements IRecycl
         }
 
         return false;
+    }
+
+    private void resetRecyclerViewFieldmLastTouchY(MotionEvent event) {
+        //通过反射拿到 mLastTouchY
+        // 把mLastTouchY 重置
+
+        if (isResetNeeded) {
+            try {
+                Field declaredField = RecyclerView.class.getDeclaredField("mLastTouchY");
+                declaredField.setAccessible(true);
+                int value = (int) (event.getY() + 0.5f);
+                declaredField.set(baseRecyclerView, value);
+                Log.i(TAG, "onDraggingLis: " + value);
+            } catch (NoSuchFieldException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+
+            isResetNeeded = false;
+        }
     }
 
 
