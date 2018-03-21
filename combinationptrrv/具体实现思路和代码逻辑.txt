@@ -62,4 +62,23 @@
 
 # 泛型方法怎么搞
 
-#
+# 实现对headerView的定制， 把PullToRefreshLayout搞成抽象类， 提取抽象方法
+
+public abstract class PullToRefreshLayout extends FrameLayout implements IRecyclerViewDataChanged<ArrayList<String>>, IRecyclerViewInitData<ArrayList<String>> {}
+
+
+public PullToRefreshLayout(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+//        inflate = inflate(context, R.layout.ptr_recycler_view_layout, this);
+        // header view 可替换
+        mHeaderView = addHeaderView();
+    }
+
+
+ /**
+     * 实现对 headerView 的定制
+     *
+     * @return mHeaderView
+     */
+    protected abstract View addHeaderView();
+
