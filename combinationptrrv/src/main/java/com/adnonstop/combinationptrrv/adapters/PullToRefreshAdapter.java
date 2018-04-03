@@ -149,11 +149,11 @@ public class PullToRefreshAdapter extends RecyclerView.Adapter implements IRecyc
         if (previousDataSize != getItemCount()) {
 
             // 判断最后一条可见条目的position == getItemCount()-1 ???
-            int lVIPosition = layoutManager.findLastVisibleItemPosition();
+            int lCVIPosition = layoutManager.findLastCompletelyVisibleItemPosition();
 //        Log.i(TAG, "onScrolled: lVIPosition = "+lVIPosition);
 
             initFooterViewContainer(recyclerView);
-            if (lVIPosition == getItemCount() - 1) {// 总数据量占不满全屏， 不要 show footerView了
+            if (lCVIPosition == getItemCount() - 1) {// 总数据量占不满全屏， 不要 show footerView了
                 mFLFooterContainer.removeAllViews();
                 isFullOccupied = false;
 
